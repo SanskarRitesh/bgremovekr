@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Remover</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+        h2 {
+            margin-bottom: 15px;
+        }
+        input {
+            display: none;
+        }
+        .custom-file-upload {
+            background: #ffffff;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .custom-file-upload:hover {
+            background: #f1f1f1;
+        }
+        button {
+            width:100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        #removeBgBtn {
+            background: #ff5733;
+            color: white;
+        }
+        #removeBgBtn:hover {
+            background: #e04e2b;
+        }
+        #downloadBtn {
+            background: #28a745;
+            color: white;
+            display: none;
+        }
+        #downloadBtn:hover {
+            background: #218838;
+        }
+        .loading {
+            margin-top: 10px;
+            font-size: 14px;
+            color: yellow;
+            display: none;
+        }
+        img {
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>SR Background Remover</h2>
+    <label for="imageInput" class="custom-file-upload">Choose Image</label>
+    <input type="file" id="imageInput" accept="image/*">
+    <button id="removeBgBtn">Remove Background</button>
+    <p class="loading" id="loadingText">Processing... Please wait.</p>
+    <div id="output"></div>
+    <button id="downloadBtn">Download Image</button>
+</div>
+
+<script>
+    let processedImageURL = "";
+
+    document.getElementById("removeBgBtn").addEventListener("click", function () {
+        const fileInput = document.getElementById("imageInput");
+        const loadingText = document.getElementById("loadingText");
+        const outputDiv = document.getElementById("output");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        if (!fileInput.files.length) {
+            alert("Please select an image!");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append("image_file", file);
+        formData.append("size", "auto");
+
+        // Show loading text and disable button
+        loadingText.style.display = "block";
+        outputDiv.innerHTML = "";
+        downloadBtn.style.display = "none";
+
+        fetch("https://api.remove.bg/v1.0/removebg", {
+            method: "POST",
+            headers: {
+                "X-Api-Key": "9JCmf9Y29yCesw4Du9fueWj1" // Replace with your API key
+            },
+            body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            loadingText.style.display = "none";
+
+            if (blob.type.startsWith("image/")) {
+                processedImageURL = URL.createObjectURL(blob);
+                outputDiv.innerHTML = `<img src="${processedImageURL}" alt="No Background Image">`;
+                downloadBtn.style.display = "block"; // Show download button
+            } else {
+                alert("Error: Invalid API response. Check API key or credits.");
+            }
+        })
+        .catch(error => {
+            loadingText.style.display = "none";
+            console.error("Error:", error);
+            alert("Failed to remove background. Check API key or internet connection.");
+        });
+    });
+
+    document.getElementById("downloadBtn").addEventListener("click", function () {
+        if (processedImageURL) {
+            const a = document.createElement("a");
+            a.href = processedImageURL;
+            a.download = "no-bg-image.png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    });
+</script>
+
+</body>
+</html>
